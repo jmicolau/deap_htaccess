@@ -1,0 +1,84 @@
+# ----------------------------------------------------------------------
+# Start rewrite engine
+# Turning on the rewrite engine is necessary for the following rules and features 
+# FollowSymLinks must be enabled for this to work.
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  Options +FollowSymlinks
+  RewriteEngine On
+</IfModule>
+
+RewriteBase /
+DirectoryIndex index.php
+
+# ----------------------------------------------------------------------
+# Suppress the "www." at the beginning of URLs
+# ----------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Block access to non-existing files or directories forwarding to index.php .
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*) index.php [L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# Block access to backup and source files
+# ----------------------------------------------------------------------
+<FilesMatch "(\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist)|~)$">
+  Order allow,deny
+  Deny from all
+  Satisfy All
+</FilesMatch>
+
+# ----------------------------------------------------------------------
+# Custom error pages
+# ----------------------------------------------------------------------
+ErrorDocument 400 /error.php
+ErrorDocument 401 /error.php
+ErrorDocument 403 /error.php
+ErrorDocument 404 /error.php
+ErrorDocument 405 /error.php
+ErrorDocument 408 /error.php
+ErrorDocument 410 /error.php
+ErrorDocument 411 /error.php
+ErrorDocument 412 /error.php
+ErrorDocument 413 /error.php
+ErrorDocument 414 /error.php
+ErrorDocument 415 /error.php
+ErrorDocument 500 /error.php
+ErrorDocument 501 /error.php
+ErrorDocument 502 /error.php
+ErrorDocument 503 /error.php
+ErrorDocument 506 /error.php
+
+# ----------------------------------------------------------------------
+# Friendly URLs
+# ----------------------------------------------------------------------
+RewriteRule ^validacion/$ login.php[L,NC]
+RewriteRule ^alumnos/$ alumnos.php [L,NC]
+RewriteRule ^equipos/$ equipos.php [L,NC]
+RewriteRule ^profesores/profesor-([A-Za-z0-9-]+)/$ profesores.php?profesor=$1[L,NC]
+RewriteRule ^grupos/centro-([A-Za-z0-9-]+)/([A-Za-z0-9-]+)/$ grupos.php?centro=$1&profesor=$2 [L,NC]
+RewriteRule ^equipos/([A-Za-z0-9-]+)/([A-Za-z0-9-]+)/$ equipo.php?centro=$1&curso=$2 [L,NC]
+
+# ----------------------------------------------------------------------
+# Gzip compression
+# ----------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  # Force deflate for mangled headers
+  <IfModule mod_setenvif.c>
+    <IfModule mod_headers.c>
+      SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+      RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+    </IfModule>
+  </IfModule>
+
+</IfModule>

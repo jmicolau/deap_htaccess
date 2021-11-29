@@ -1,0 +1,40 @@
+Why does this .htaccess work when accessing example.com/mywebsite/
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php
+
+whereas this fails (404):
+
+RewriteEngine On
+RewriteRule ^(.*)$ index.php
+
+I thought the second solution should work as well.
+
+
+In order to explain this behaviour, we need to make some assumptions about your file system, and by "work" you mean that a file is served (you don't see a directory listing)...
+The .htaccess file is located in the document root and /mywebsite is a physical directory that contains an index.php file (or some DirectoryIndex document). There is no index.php file in the document root. In other words:
+
+example.com/
+    .htaccess
+    mywebsite/
+        index.php
+
+In this scenario, when you request example.com/mywebsite/ the following happens:
+
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php
+
+/mywebsite/ is a physical directory, so the first condition fails and the RewriteRule is not processed.
+
+mod_dir then searches for a DirectoryIndex, finds index.php and the .htaccess file is reprocessed. This now maps to a physical file, so the second condition fails and the RewriteRule is not processed.
+
+The net result is that example.com/mywebsite/index.php gets requested. The same as if there was no .htaccess file at all.
+
+    RewriteRule ^(.*)$ index.php
+
+However, in this scenario, there are no conditions. The RewriteRule gets processed unconditionally and internally rewrites the request to example.com/index.php (strictly speaking it's <filesystem-path-to-document-root>/index.php) since that is where the .htaccess file is located.
+
+However, there is no index.php file in the document root; hence the 404.
